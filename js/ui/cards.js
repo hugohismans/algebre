@@ -28,7 +28,7 @@ export function renderHand(ops, { zone, onPlay, onHover, enabled }) {
   for (const op of ops) {
     const label = formatOp(op);
     const card = h('button', {
-      class: `card card-${FAMILY[op.type]}`, type: 'button',
+      class: `card card-${FAMILY[op.type]}${label.length > 4 ? ' card-long' : ''}`, type: 'button',
       'aria-label': `${label} : ${caption(op)} de chaque côté`,
     },
     h('span', { class: 'card-label' }, label),

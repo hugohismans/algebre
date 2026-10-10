@@ -6,6 +6,7 @@ export default {
   id: 2,
   title: 'La règle d\'or',
   subtitle: 'Ce qu\'on fait d\'un côté, on le fait de l\'autre',
+  briefing: 'Fini les essais au hasard : le QG te confie des cartes d\'opération. Chaque carte agit sur les deux plateaux à la fois, pour que la balance reste à l\'équilibre. Ton objectif : laisser une mallette seule sur un plateau. Les lingots en face donnent alors sa valeur.',
   rules: { negatives: false, fractions: false },
   display: 'full',
   levels: [
@@ -23,6 +24,7 @@ export default {
     { id: '2-7', start: '3x=12', cards: ['/2', '/3', '/4'], par: 1,
       intro: 'On ne partage que si chaque plateau se coupe en parts égales, sans couper de mallette.' },
     { id: '2-8', start: '2x=x+1', cards: ['/2', '-x'], par: 1,
-      intro: 'La carte −x retire une mallette de chaque côté. Ça marche parce que toutes les mallettes valent pareil.' },
+      intro: 'La carte −x retire une mallette de chaque côté. Ça marche parce que toutes les mallettes valent pareil.',
+      outro: 'Tu maîtrises la règle d\'or. Les prochaines affaires se cachent derrière un double fond : il faudra plusieurs cartes, dans le bon ordre.' },
   ],
 };

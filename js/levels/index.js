@@ -1,7 +1,8 @@
 /**
  * Catalogue des mondes. Un niveau est une donnée pure :
- *   { id, start: '2x+1=9', cards: ['-1', '/2'], par, intro?, outro?, mode?: 'guess' }
- * intro : briefing affiché au début ; outro : message du rapport de victoire.
+ *   { id, start: '2x+1=9', cards: ['-1', '/2'], par, intro?, outro?, mode?: 'guess' | 'build', story? }
+ * intro : briefing affiché au début ; outro : message du rapport de victoire ;
+ * story : témoignage à mettre en équation (mode « build »).
  * Le monde peut avoir un briefing (écran des missions). Il fournit les règles
  * (negatives, fractions) et l'affichage
  * ('full' | 'mixed' | 'symbolic'). Un niveau peut surcharger rules et display.
@@ -9,20 +10,13 @@
  */
 import world1 from './world1.js';
 import world2 from './world2.js';
+import world3 from './world3.js';
+import world4 from './world4.js';
+import world5 from './world5.js';
+import world6 from './world6.js';
+import world7 from './world7.js';
 
-const upcoming = (id, title, subtitle) => ({
-  id, title, subtitle, upcoming: true, rules: { negatives: false, fractions: false }, display: 'full', levels: [],
-});
-
-export const WORLDS = [
-  world1,
-  world2,
-  upcoming(3, 'Double fond', 'Deux étapes, dans le bon ordre'),
-  upcoming(4, 'Agents doubles', 'Des x des deux côtés'),
-  upcoming(5, 'Ballons espions', 'Ils allègent : les nombres négatifs'),
-  upcoming(6, 'Plis scellés', 'Les parenthèses'),
-  upcoming(7, 'Témoignages', 'Du récit à l\'équation'),
-];
+export const WORLDS = [world1, world2, world3, world4, world5, world6, world7];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === Number(id));
 

@@ -42,6 +42,9 @@ export function memberEquals(a, b) {
 
 export const equationEquals = (a, b) => memberEquals(a.left, b.left) && memberEquals(a.right, b.right);
 
+/** Même balance, éventuellement retournée (plateaux échangés) : sert à vérifier une mise en équation. */
+export const sameBalance = (a, b) => equationEquals(a, b) || equationEquals(a, { left: b.right, right: b.left });
+
 /** Valeur numérique d'un membre pour une valeur donnée de x (fraction). */
 export function evaluate(m, value) {
   const e = expand(m);

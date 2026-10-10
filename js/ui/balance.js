@@ -28,8 +28,9 @@ const ITEM = {
   box: { w: 46, h: 44, gap: 4 },
   unit: { w: 24, h: 13, gap: 2 },
   ten: { w: 50, h: 15, gap: 2 },
-  balloon: { w: 22, h: 26, gap: 3 },
-  bag: { w: 60, h: 46, gap: 6 },
+  antibox: { w: 46, h: 66, gap: 4 },
+  balloon: { w: 22, h: 30, gap: 2 },
+  bag: { w: 58, h: 42, gap: 6 },
 };
 
 /* ------------------------------------------------------------- dessin des objets */
@@ -75,8 +76,12 @@ function drawBox({ label, contents }, prev = contents) {
     ];
   }
   const iw = w - 6, ih = h - 13;
-  const minis = insideLayout(Math.min(contents, MAX_INSIDE), iw, ih).map((m, i) => {
-    const el = s('rect', { class: 'mini-ingot', x: m.x, y: -3 + m.y, width: m.w, height: m.h, rx: 1 });
+  // Contenu négatif : la mallette est pleine de ballons (elle tire vers le haut).
+  const neg = contents < 0;
+  const minis = insideLayout(Math.min(Math.abs(contents), MAX_INSIDE), iw, ih).map((m, i) => {
+    const el = neg
+      ? s('ellipse', { class: 'mini-balloon', cx: m.x + m.w / 2, cy: -3 + m.y + m.h / 2, rx: m.w / 2.4, ry: m.h / 1.3 })
+      : s('rect', { class: 'mini-ingot', x: m.x, y: -3 + m.y, width: m.w, height: m.h, rx: 1 });
     if (i >= prev) {
       el.classList.add('mini-new');
       el.style.animationDelay = `${Math.min(i - prev, 12) * 45}ms`;
@@ -89,7 +94,21 @@ function drawBox({ label, contents }, prev = contents) {
     s('rect', { class: 'case-window', x: -iw / 2, y: -h + 10, width: iw, height: ih + 1, rx: 2 }),
     ...minis,
     s('circle', { class: 'case-badge', cx: w / 2 - 1, cy: -h + 8, r: 8.5 }),
-    s('text', { class: 'case-badge-text', x: w / 2 - 1, y: -h + 11.5, 'text-anchor': 'middle' }, String(contents)),
+    s('text', { class: 'case-badge-text', x: w / 2 - 1, y: -h + 11.5, 'text-anchor': 'middle' }, neg ? `\u2212${-contents}` : String(contents)),
+  ];
+}
+
+/** Mallette-ballon : une mallette x accrochée à un ballon espion, elle compte pour −x. */
+function drawAntiBox() {
+  const { w } = ITEM.box, h = ITEM.box.h;
+  return [
+    s('path', { class: 'balloon-string', d: `M0 ${-h - 2} q -4 -7 0 -14` }),
+    s('ellipse', { class: 'balloon-body', cx: 0, cy: -h - 24, rx: 9, ry: 10 }),
+    s('ellipse', { class: 'balloon-shine', cx: -3, cy: -h - 28, rx: 2.5, ry: 3.5 }),
+    s('path', { class: 'case-handle', d: `M-7 ${-h + 7} v-4 q0 -4 4 -4 h6 q4 0 4 4 v4` }),
+    s('rect', { class: 'case-body anti', x: -w / 2, y: -h + 7, width: w, height: h - 7, rx: 4 }),
+    s('rect', { class: 'case-band', x: -w / 2, y: -h + 13, width: w, height: 3 }),
+    s('text', { class: 'box-label', x: 0, y: -5, 'text-anchor': 'middle' }, '\u2212x'),
   ];
 }
 
@@ -111,22 +130,28 @@ function drawTen() {
   ];
 }
 
+/** Un ballon espion : il tire le plateau vers le haut, il vaut −1. */
 function drawBalloon() {
   return [
-    s('path', { class: 'balloon-string', d: 'M0 0 q -3 -4 0 -8' }),
-    s('ellipse', { class: 'balloon-body', cx: 0, cy: -17, rx: 10, ry: 11 }),
+    s('path', { class: 'balloon-string', d: 'M0 0 q -4 -5 0 -10' }),
+    s('ellipse', { class: 'balloon-body', cx: 0, cy: -20, rx: 9.5, ry: 10.5 }),
+    s('ellipse', { class: 'balloon-shine', cx: -3, cy: -24, rx: 2.5, ry: 3.5 }),
   ];
 }
 
-function drawBag(g) {
+/**
+ * Un pli scellé (parenthèses) : une enveloppe qui contient « x + 3 ».
+ * 2(x + 3) se dessine comme deux enveloppes identiques ; un facteur qui ne se
+ * compte pas en enveloppes s'écrit dessus (×1/2…).
+ */
+function drawEnvelope(g, factor) {
   const { w, h } = ITEM.bag;
-  const inner = formatMember({ x: g.x, c: g.c, groups: [] });
-  const k = F.toString(g.k);
   return [
-    s('path', { class: 'bag-body', d: `M${-w / 2 + 6} 0 h${w - 12} q6 0 6 -8 l-4 ${-h + 18} q-1 -6 -8 -6 h${-w + 20} q-7 0 -8 6 l-4 ${h - 18} q0 8 6 8z` }),
-    s('path', { class: 'bag-tie', d: `M-8 ${-h + 4} l8 6 l8 -6` }),
-    s('text', { class: 'bag-label', x: 0, y: -h / 2 + 4, 'text-anchor': 'middle' }, inner),
-    k === '1' ? null : s('text', { class: 'bag-factor', x: w / 2 - 4, y: -h + 8, 'text-anchor': 'middle' }, `×${k}`),
+    s('rect', { class: 'env-body', x: -w / 2, y: -h, width: w, height: h, rx: 3 }),
+    s('path', { class: 'env-flap', d: `M${-w / 2 + 1} ${-h + 1} L0 ${-h + 17} L${w / 2 - 1} ${-h + 1}` }),
+    s('circle', { class: 'env-seal', cx: 0, cy: -h + 16, r: 5 }),
+    s('text', { class: 'env-label', x: 0, y: -7, 'text-anchor': 'middle' }, formatMember({ x: g.x, c: g.c, groups: [] })),
+    factor ? s('text', { class: 'env-factor', x: w / 2 - 3, y: -h - 3, 'text-anchor': 'end' }, `×${factor}`) : null,
   ];
 }
 
@@ -138,8 +163,16 @@ function drawBag(g) {
  */
 function itemsOf(m) {
   const items = [];
-  m.groups.forEach((g, i) => items.push({ key: `g${i}`, kind: 'bag', group: g }));
-  const nx = Math.max(0, Math.floor(F.toNumber(m.x)));
+  m.groups.forEach((g, i) => {
+    const sig = `bag:${formatMember({ x: g.x, c: g.c, groups: [] })}`;
+    const k = F.toNumber(g.k);
+    if (F.isInt(g.k) && k > 0 && k <= 6) {
+      for (let j = 0; j < k; j++) items.push({ key: `g${i}-${j}`, kind: 'bag', sig, group: g });
+    } else {
+      items.push({ key: `g${i}`, kind: 'bag', sig: `${sig}×${F.toString(g.k)}`, group: g, factor: F.toString(g.k) });
+    }
+  });
+  const nx = Math.floor(F.toNumber(m.x));
   for (let i = 0; i < nx; i++) items.push({ key: `x${i}`, kind: 'box' });
   const c = Math.floor(F.toNumber(m.c));
   if (c > 0) {
@@ -147,9 +180,10 @@ function itemsOf(m) {
     const tens = c > 20 ? Math.floor(c / 10) : 0;
     for (let i = 0; i < tens; i++) items.push({ key: `t${i}`, kind: 'ten' });
     for (let i = 0; i < c - tens * 10; i++) items.push({ key: `u${i}`, kind: 'unit' });
-  } else {
-    for (let i = 0; i < -c; i++) items.push({ key: `b${i}`, kind: 'balloon' });
   }
+  // Ce qui tire vers le haut se range au-dessus : mallettes-ballons, puis ballons.
+  for (let i = 0; i < -nx; i++) items.push({ key: `a${i}`, kind: 'antibox' });
+  for (let i = 0; i < -c; i++) items.push({ key: `b${i}`, kind: 'balloon' });
   return items;
 }
 
@@ -270,17 +304,18 @@ export function createBalance() {
     for (const it of items) {
       const p = pos.get(it.key);
       let el = before.get(it.key);
-      if (el && el.dataset.kind === it.kind && it.kind !== 'bag') {
+      if (el && el.dataset.sig === (it.sig ?? it.kind)) {
         before.delete(it.key);
         el.style.transitionDelay = '0ms';
       } else {
         if (el) { before.delete(it.key); el.remove(); }
         const parts = it.kind === 'box' ? drawBox(box)
+          : it.kind === 'antibox' ? drawAntiBox()
           : it.kind === 'unit' ? drawUnit()
           : it.kind === 'ten' ? drawTen()
           : it.kind === 'balloon' ? drawBalloon()
-          : drawBag(it.group);
-        el = s('g', { class: `item item-${it.kind}`, 'data-kind': it.kind }, parts);
+          : drawEnvelope(it.group, it.factor);
+        el = s('g', { class: `item item-${it.kind}`, 'data-kind': it.kind, 'data-sig': it.sig ?? it.kind }, parts);
         el.style.transform = `translate(${p.x}px, ${p.y - 140}px)`;
         el.style.opacity = '0';
         stack.append(el);
@@ -296,11 +331,13 @@ export function createBalance() {
     }
     for (const el of before.values()) {
       el.classList.add('leaving');
-      const t = el.style.transform.replace(/translate\(([^,]+), ([-\d.]+)px\)/, (_, x, y) => `translate(${x}, ${Number(y) - 70}px)`);
+      // Les ballons s'envolent haut (ils annulent un lingot) ; le reste s'efface en montant.
+      const rise = el.dataset.kind === 'balloon' ? 180 : 70;
+      const t = el.style.transform.replace(/translate\(([^,]+), ([-\d.]+)px\)/, (_, x, y) => `translate(${x}, ${Number(y) - rise}px)`);
       el.style.transitionDelay = '0ms';
       el.style.transform = t;
       el.style.opacity = '0';
-      setTimeout(() => el.remove(), 450);
+      setTimeout(() => el.remove(), 750);
     }
     current[side] = after;
   }
@@ -355,11 +392,11 @@ export function createBalance() {
     },
     /** Victoire : on ouvre les mallettes, ou on écrit la valeur si elle ne se compte pas en lingots. */
     reveal(value) {
-      if (F.isInt(value) && F.sign(value) >= 0 && F.toNumber(value) <= MAX_INSIDE) {
+      if (F.isInt(value) && Math.abs(F.toNumber(value)) <= MAX_INSIDE) {
         this.setBoxContents(F.toNumber(value), 'revealed');
       } else {
         box.contents = null;
-        box.label = F.toString(value);
+        box.label = F.toString(value).replace('-', '\u2212');
         repaintBoxes(0, 'revealed');
       }
     },

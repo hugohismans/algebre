@@ -25,6 +25,9 @@ function load() {
 
 let state = load();
 
+/** Code agent dans l'URL (?code=007) : ouvre tous les dossiers, pour tester. */
+const ALL_ACCESS = typeof location !== 'undefined' && new URLSearchParams(location.search).get('code') === '007';
+
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* stockage indisponible */ }
 }
@@ -50,6 +53,7 @@ export const worldDone = (world) => world.levels.length > 0 && world.levels.ever
 /** Un monde est ouvert si c'est le premier, ou si le monde précédent est terminé. */
 export function worldUnlocked(world) {
   if (world.upcoming) return false;
+  if (ALL_ACCESS) return true;
   const i = WORLDS.indexOf(world);
   return i === 0 || worldDone(WORLDS[i - 1]);
 }
@@ -57,7 +61,7 @@ export function worldUnlocked(world) {
 /** Un niveau est ouvert si son monde l'est et que le niveau précédent est réussi. */
 export function levelUnlocked(world, index) {
   if (!worldUnlocked(world)) return false;
-  return index === 0 || !!state.levels[world.levels[index - 1].id];
+  return ALL_ACCESS || index === 0 || !!state.levels[world.levels[index - 1].id];
 }
 
 export function totalStars() {

@@ -5,7 +5,7 @@
 import { test, assert, run } from './run.js';
 import {
   F, parseEquation, parseOp, formatEquation, formatOp, formatValue, apply, validate,
-  isSolved, solve, equivalent, expand, shortestSolution, equationEquals,
+  isSolved, solve, equivalent, expand, shortestSolution, equationEquals, sameBalance,
 } from '../js/engine/index.js';
 
 const eqn = parseEquation;
@@ -154,6 +154,11 @@ test('expand et égalité', () => {
   assert.ok(F.eq(e.x, 3) && F.eq(e.c, 6));
   assert.ok(equationEquals(eqn('x+1=2'), eqn('1+x=2')));
 });
+test('sameBalance : plateaux échangés acceptés, équation équivalente refusée', () => {
+  assert.ok(sameBalance(eqn('x+3=11'), eqn('11=3+x')));
+  assert.ok(!sameBalance(eqn('x+3=11'), eqn('2x+6=22')));
+  assert.ok(!sameBalance(eqn('x+3=11'), eqn('x=8')));
+});
 test('solveur : chemin le plus court', () => {
   const ops = ['-1', '-2', '/2', '/3', '-x'].map(parseOp);
   const r = shortestSolution(eqn('3x+2=x+8'), ops, {});
@@ -173,6 +178,7 @@ test('niveaux : identifiants uniques et données lisibles', () => {
     eqn(l.start);
     (l.cards ?? []).forEach(parseOp);
     assert.ok(Number.isInteger(l.par) && l.par >= 1, `${l.id} : par invalide`);
+    if (l.mode === 'build') assert.ok(l.story, `${l.id} : témoignage manquant`);
   }
 });
 test('niveaux : solution entière et positive dans les mondes sans fractions', () => {

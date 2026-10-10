@@ -55,7 +55,11 @@ Dans `js/levels/worldN.js` :
 { id: '2-9', start: '3x+1=10', cards: ['-1', '/3'], par: 2, intro: 'Texte facultatif' }
 ```
 
-Cartes : `+3` `-3` `*2` `/2` `-x` (retirer une mallette) `+x` `dist` (ouvrir les plis).
+Cartes : `+3` `-3` `*2` `/2` `-x` `-2x` (retirer des mallettes) `+x` `dist` (ouvrir les plis).
+Modes : `mode: 'guess'` (devinette, dossier 1, avec `openCase` pour la mallette ouverte),
+`mode: 'build'` avec `story` (témoignage à mettre en équation, dossier 7).
+
+Pour tester sans tout jouer : ajouter `?code=007` à l'adresse ouvre tous les dossiers.
 Les règles du monde (`negatives`, `fractions`) disent ce que la balance autorise.
 Lancer les tests : ils signalent un par faux ou un niveau impossible.
 
@@ -68,11 +72,11 @@ Annuler est illimité et sans pénalité.
 
 - [x] Moteur et tests
 - [x] Direction artistique : espionnage, enquête
-- [x] Dossier 1 : la mallette (devinette)
+- [x] Dossier 1 : la mallette (devinette, intuition par essais et erreurs)
 - [x] Dossier 2 : la règle d'or (une opération)
-- [ ] Dossier 3 : double fond (deux étapes)
-- [ ] Dossier 4 : agents doubles (x des deux côtés)
-- [ ] Dossier 5 : ballons espions (négatifs)
-- [ ] Dossier 6 : plis scellés (parenthèses)
-- [ ] Dossier 7 : témoignages (mise en équation)
+- [x] Dossier 3 : double fond (deux étapes)
+- [x] Dossier 4 : agents doubles (x des deux côtés)
+- [x] Dossier 5 : ballons espions (négatifs)
+- [x] Dossier 6 : plis scellés (parenthèses, distributivité)
+- [x] Dossier 7 : témoignages (mise en équation)
 - [ ] Plus tard : mode création, énigme partagée par lien

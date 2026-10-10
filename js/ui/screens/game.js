@@ -1,13 +1,15 @@
 /**
  * Écran de jeu : la balance, l'équation écrite, les cartes (ou le pavé de
  * devinette du monde 1), annuler / recommencer et la victoire.
+ * Mode « build » (dossier 7) : on construit d'abord la balance à partir d'un
+ * témoignage, puis on la résout avec les cartes.
  */
 import { h, stars, wait, typo, stamp, typewrite } from '../dom.js';
 import { createBalance } from '../balance.js';
 import { renderHand } from '../cards.js';
 import { confetti, toast } from '../fx.js';
 import {
-  F, parseEquation, parseOp, validate, isSolved, solve, evaluate,
+  F, parseEquation, parseOp, validate, isSolved, solve, evaluate, equation, sameBalance,
   formatEquation, formatValue, formatOp,
 } from '../../engine/index.js';
 import { getLevel, WORLDS } from '../../levels/index.js';
@@ -54,6 +56,9 @@ export function gameScreen(root, params) {
   const ops = lvl.cards.map(parseOp);
   const guess = lvl.mode === 'guess';
   const solution = solve(start).value;
+  // Mise en équation : tant que la balance n'est pas construite, on est en phase « build ».
+  let building = lvl.mode === 'build';
+  let built = equation({}, {});
 
   let history = [start];
   let played = [];
@@ -85,13 +90,21 @@ export function gameScreen(root, params) {
         h('p', {}, lvl.intro)),
       h('button', { class: 'intro-ok', type: 'button', onclick: () => intro.remove() }, 'Compris'))
     : null;
+  // Le témoignage reste affiché : on en a besoin pour construire la balance.
+  const testimony = lvl.story
+    ? h('div', { class: 'testimony', role: 'note' },
+      h('span', { class: 'paper-label' }, 'Témoignage'),
+      h('p', {}, `« ${lvl.story} »`))
+    : null;
 
-  const controls = guess ? guessPanel() : renderHand(ops, {
+  const hand = () => renderHand(ops, {
     zone: () => stage,
-    enabled: () => !busy && !won,
+    enabled: () => !busy && !won && !building,
     onHover: (on) => stage.classList.toggle('drop-hover', on),
     onPlay: play,
   });
+  let controls = guess ? guessPanel() : building ? buildPanel() : hand();
+  const controlsSlot = h('div', { class: 'controls' }, controls);
 
   const screen = h('main', { class: `screen screen-game world-${lvl.world.id} display-${lvl.display}${guess ? ' mode-guess' : ''}` },
     h('header', { class: 'topbar' },
@@ -103,21 +116,24 @@ export function gameScreen(root, params) {
       guess ? null : restartBtn),
     h('div', { class: 'play' },
       intro,
+      testimony,
       stage,
       eqPanel,
       h('div', { class: 'status' }, counter),
-      controls));
+      controlsSlot));
   root.append(screen);
 
   /* ---------------------------------------------------------------- état → écran */
   function update({ animateEq = true } = {}) {
+    if (building) { updateBuild(); return; }
     const eq = current();
     balance.setEquation(eq);
     if (animateEq) typewrite(eqCurrent, formatEquation(eq));
     else { eqCurrent.__typing = (eqCurrent.__typing ?? 0) + 1; eqCurrent.textContent = formatEquation(eq); }
     if (!guess && played.length) {
       eqPrev.textContent = formatEquation(history[history.length - 2]);
-      eqNote.textContent = `${formatOp(played[played.length - 1])} des deux côtés`;
+      const last = played[played.length - 1];
+      eqNote.textContent = last.type === 'distribute' ? 'Plis ouverts (distributivité)' : `${formatOp(last)} des deux côtés`;
     } else {
       eqPrev.textContent = '';
       if (!guess) eqNote.textContent = '';
@@ -127,6 +143,69 @@ export function gameScreen(root, params) {
       : `Coups : ${played.length} · Par : ${lvl.par}`);
     undoBtn.disabled = played.length === 0 || won;
     restartBtn.disabled = won;
+  }
+
+  /* ---------------------------------------------------------------- mise en équation */
+  function updateBuild() {
+    screen.classList.toggle('building', building);
+    balance.setEquation(built);
+    eqCurrent.__typing = (eqCurrent.__typing ?? 0) + 1;
+    eqCurrent.textContent = formatEquation(built);
+    eqPrev.textContent = '';
+    eqNote.textContent = 'Construis la balance du témoignage';
+    counter.textContent = typo(`Construction · Par : ${lvl.par}`);
+    undoBtn.disabled = true;
+    restartBtn.disabled = won;
+  }
+
+  /** Pavé de construction : mallettes et lingots (ou ballons) de chaque côté. */
+  function buildPanel() {
+    const field = (side, key, label, min, max) => {
+      const out = h('output', { class: 'build-value' });
+      const show = () => {
+        const v = F.toNumber(built[side][key]);
+        out.textContent = key === 'x' ? String(v) : v < 0 ? `${-v} ballon${v < -1 ? 's' : ''}` : String(v);
+      };
+      const change = (d) => {
+        if (busy || won) return;
+        const v = Math.max(min, Math.min(max, F.toNumber(built[side][key]) + d));
+        const m = { x: built[side].x, c: built[side].c, [key]: v };
+        built = { ...built, [side]: equation(m, {}).left };
+        show();
+        updateBuild();
+      };
+      show();
+      return h('div', { class: 'build-field' },
+        h('span', { class: 'build-label' }, label),
+        h('div', { class: 'build-row' },
+          h('button', { class: 'round-btn small', type: 'button', 'aria-label': `${label} ${side === 'left' ? 'à gauche' : 'à droite'} : moins`, onclick: () => change(-1) }, '−'),
+          out,
+          h('button', { class: 'round-btn small', type: 'button', 'aria-label': `${label} ${side === 'left' ? 'à gauche' : 'à droite'} : plus`, onclick: () => change(1) }, '+')));
+    };
+    const column = (side, title) => h('div', { class: 'build-col' },
+      h('span', { class: 'paper-label' }, title),
+      field(side, 'x', 'Mallettes', 0, 6),
+      field(side, 'c', 'Lingots', -12, 30));
+    return h('div', { class: 'build' },
+      h('div', { class: 'build-cols' }, column('left', 'Plateau gauche'), column('right', 'Plateau droit')),
+      h('button', { class: 'primary', type: 'button', onclick: checkBuild }, 'Valider'));
+  }
+
+  function checkBuild() {
+    if (busy || won) return;
+    if (!sameBalance(built, start)) {
+      balance.reject([]);
+      toast(stage, 'Ce n\'est pas ce que dit le témoin. Relis le témoignage, mot à mot.', 'warn', 'Fausse piste');
+      return;
+    }
+    // On garde le sens choisi par le joueur (plateaux éventuellement échangés).
+    building = false;
+    screen.classList.remove('building');
+    history = [built];
+    toast(stage, 'Balance conforme au témoignage. À toi de la résoudre !', 'info', 'Confirmé');
+    controls = hand();
+    controlsSlot.replaceChildren(controls);
+    update();
   }
 
   /* ---------------------------------------------------------------- cartes */
@@ -155,7 +234,12 @@ export function gameScreen(root, params) {
 
   function restart() {
     if (busy || won) return;
-    history = [start]; played = [];
+    if (building) {
+      built = equation({}, {});
+      controls = buildPanel();
+      controlsSlot.replaceChildren(controls);
+    }
+    history = [history[0]]; played = [];
     update();
   }
 
@@ -213,6 +297,7 @@ export function gameScreen(root, params) {
   async function win(value) {
     won = true; busy = true;
     intro?.remove(); // le briefing se replie : la balance remonte
+    stage.querySelector('.toast')?.remove();
     update({ animateEq: false });
     if (guess) typewrite(eqCurrent, `x = ${formatValue(value)}`);
     await wait(550);
@@ -233,7 +318,10 @@ export function gameScreen(root, params) {
     const advice = earned < 3
       ? h('p', { class: 'advice' }, `Le QG l'a résolu en ${lvl.par} ${guess ? 'essai' : 'coup'}${lvl.par > 1 ? 's' : ''}. Sauras-tu faire aussi bien ?`)
       : null;
-    const worth = F.isInt(value) && F.toNumber(F.abs(value)) <= 1 ? 'lingot' : 'lingots';
+    const abs = F.toNumber(F.abs(value));
+    const worth = F.sign(value) < 0 && F.isInt(value)
+      ? `La mallette contient ${abs} ballon${abs > 1 ? 's' : ''} : elle vaut ${formatValue(value)}.`
+      : `La mallette vaut ${formatValue(value)} lingot${F.isInt(value) && abs <= 1 ? '' : 's'}.`;
     // Panneau qui monte du bas, sans voile : la balance résolue reste visible.
     const overlay = h('div', { class: 'overlay', role: 'dialog', 'aria-label': 'Affaire classée' },
       h('div', { class: 'victory' },
@@ -241,7 +329,7 @@ export function gameScreen(root, params) {
           h('div', {},
             h('span', { class: 'paper-label' }, 'Rapport final'),
             h('p', { class: 'victory-solution' }, `x = ${formatValue(value)}`),
-            h('p', { class: 'victory-worth' }, `La mallette vaut ${formatValue(value)} ${worth}.`)),
+            h('p', { class: 'victory-worth' }, worth)),
           stamp('Affaire classée', 'stamp-big')),
         h('div', { class: 'victory-score' },
           stars(earned, 3, 'big'),
@@ -261,9 +349,14 @@ export function gameScreen(root, params) {
   function replay() {
     won = false; busy = false;
     screen.classList.remove('won');
-    history = [start]; played = []; tries = 0;
+    history = [history[0]]; played = []; tries = 0;
     balance.resetBoxes(openCase ? 0 : null);
     if (guess) controls.reset();
+    if (lvl.mode === 'build') {
+      building = true; built = equation({}, {}); history = [start];
+      controls = buildPanel();
+      controlsSlot.replaceChildren(controls);
+    }
     eqCurrent.classList.remove('solved');
     eqNote.textContent = '';
     update();

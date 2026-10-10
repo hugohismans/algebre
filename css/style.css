@@ -32,6 +32,7 @@
   --green: #2e8a62;
   --blue: #3f6fa6;
   --blue-dark: #2b4f7a;
+  --balloon: #d9607f;
   --radius: 6px;
   --shadow: 0 1px 0 rgba(0, 0, 0, .25), 0 10px 24px rgba(0, 0, 0, .35);
   --font-type: "Special Elite", "Courier New", ui-monospace, monospace;
@@ -317,12 +318,18 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .ingot-body { fill: var(--gold); stroke: var(--gold-dark); stroke-width: 1.2; stroke-linejoin: round; }
 .ingot-top { fill: var(--gold-light); }
 .ingot-label { fill: var(--gold-dark); font: 700 11px var(--font-mono); }
-.balloon-body { fill: #c0577a; }
+.balloon-body { fill: var(--balloon); stroke: #8f3355; stroke-width: 1; }
+.balloon-shine { fill: rgba(255, 255, 255, .45); }
 .balloon-string { stroke: var(--ink-soft); fill: none; stroke-width: 1.2; }
-.bag-body { fill: #e9dcbc; stroke: #8a6a3e; stroke-width: 2; }
-.bag-tie { stroke: var(--red); stroke-width: 2.5; fill: none; stroke-linecap: round; }
-.bag-label { fill: var(--ink); font: 700 13px var(--font-mono); }
-.bag-factor { fill: var(--red); font: 700 13px var(--font-mono); }
+.item-balloon.leaving { transition: transform .7s ease-in, opacity .7s ease-in; }
+.case-body.anti { fill: #4a3a52; }
+.mini-balloon { fill: var(--balloon); stroke: #8f3355; stroke-width: .5; }
+/* plis scellés (parenthèses) */
+.env-body { fill: #f5ead0; stroke: #8a6a3e; stroke-width: 1.5; }
+.env-flap { fill: none; stroke: #8a6a3e; stroke-width: 1.2; stroke-linejoin: round; }
+.env-seal { fill: var(--red); stroke: var(--red-dark); stroke-width: 1; }
+.env-label { fill: var(--ink); font: 700 13px var(--font-mono); }
+.env-factor { fill: var(--red); font: 700 13px var(--font-mono); }
 
 .balance.shake { animation: shake .45s; }
 @keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
@@ -346,7 +353,8 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .status { text-align: center; color: var(--on-desk-soft); font: 700 14px var(--font-mono); }
 
 /* cartes : des fiches d'ordre */
-.hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 8px 0 4px; margin-top: auto; }
+.controls { margin-top: auto; }
+.hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 8px 0 4px; }
 .card {
   position: relative; display: grid; justify-items: center; align-content: center; gap: 4px;
   width: 92px; min-height: 108px; padding: 14px 6px 10px;
@@ -365,6 +373,7 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .hand .card:active { transform: translateY(1px); }
 .card-label { position: relative; z-index: 1; font: 700 32px/1 var(--font-mono); color: var(--cc-dark); }
 .card-caption { font-size: 12px; line-height: 1.2; color: var(--ink-soft); text-align: center; }
+.card-long .card-label { font-size: 15px; letter-spacing: -.02em; }
 .card-weights { --cc: var(--gold); --cc-dark: var(--gold-dark); }
 .card-boxes { --cc: var(--case); --cc-dark: var(--case); }
 .card-scale { --cc: var(--blue); --cc-dark: var(--blue-dark); }
@@ -379,7 +388,7 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .drag-ghost.drag-drop { transition: opacity .2s, scale .2s; opacity: 0; scale: .6; }
 
 /* devinette : un cadran à molettes */
-.guess { display: grid; justify-items: center; gap: 12px; margin-top: auto; padding: 6px 0 4px; }
+.guess { display: grid; justify-items: center; gap: 12px; padding: 6px 0 4px; }
 .guess-row { display: flex; align-items: center; gap: 12px; }
 .guess-x { font: 700 28px var(--font-mono); }
 .guess-value {
@@ -395,6 +404,27 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 }
 .round-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #5a4214; }
 .guess .primary { min-width: 200px; }
+
+/* mise en équation : construire la balance du témoignage */
+.testimony {
+  padding: 10px 14px; border-radius: var(--radius);
+  background-color: #fff6df; color: var(--ink); box-shadow: var(--shadow);
+  border-left: 5px solid var(--red); transform: rotate(.3deg);
+}
+.testimony p { margin: 4px 0 0; font: italic 15px/1.4 var(--font-mono); }
+.build { display: grid; justify-items: center; gap: 12px; padding: 4px 0; }
+.build-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.build-col {
+  display: grid; gap: 4px; justify-items: center; padding: 8px 4px;
+  border: 1px solid var(--desk-line); border-radius: 10px; background: rgba(255, 255, 255, .04);
+}
+.build-col .paper-label { color: var(--on-desk-soft); font-size: 11px; }
+.build-field { display: grid; justify-items: center; gap: 4px; }
+.build-label { font: 13px var(--font-type); letter-spacing: .08em; text-transform: uppercase; color: var(--on-desk-soft); }
+.build-row { display: flex; align-items: center; gap: 8px; }
+.build-value { min-width: 4.6ch; text-align: center; font: 700 18px var(--font-mono); white-space: nowrap; }
+.round-btn.small { width: 36px; height: 36px; font-size: 20px; }
+.build .primary { min-width: 200px; }
 
 /* message : une note tamponnée */
 .toast {
@@ -428,7 +458,7 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 }
 @keyframes sheet-up { from { transform: translateY(110%); } }
 .victory-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.victory-solution { margin: 6px 0 0; font: 700 38px/1 var(--font-mono); }
+.victory-solution { margin: 6px 0 0; font: 700 38px/1 var(--font-mono); white-space: nowrap; }
 .victory-worth { margin: 4px 0 0; font: 14px var(--font-mono); color: var(--ink-soft); }
 .victory .stamp-big { flex: none; margin: 0 4px 0 0; font-size: 17px; padding: 5px 9px 3px; border-width: 3px; }
 .victory-score { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
@@ -457,6 +487,8 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .display-mixed .balance { max-height: 28vh; opacity: .85; }
 .display-symbolic .balance { max-height: 18vh; opacity: .6; }
 .display-symbolic .eq-current { font-size: clamp(32px, 10vw, 46px); }
+.building .balance { max-height: 26vh; opacity: 1; }
+.building .equation { min-height: 0; }
 
 /* ------------------------------------------------------------------ grand écran */
 @media (min-width: 720px) {
