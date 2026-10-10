@@ -212,6 +212,7 @@ export function gameScreen(root, params) {
   /* ---------------------------------------------------------------- victoire */
   async function win(value) {
     won = true; busy = true;
+    intro?.remove(); // le briefing se replie : la balance remonte
     update({ animateEq: false });
     if (guess) typewrite(eqCurrent, `x = ${formatValue(value)}`);
     await wait(550);
@@ -233,25 +234,33 @@ export function gameScreen(root, params) {
       ? h('p', { class: 'advice' }, `Le QG l'a résolu en ${lvl.par} ${guess ? 'essai' : 'coup'}${lvl.par > 1 ? 's' : ''}. Sauras-tu faire aussi bien ?`)
       : null;
     const worth = F.isInt(value) && F.toNumber(F.abs(value)) <= 1 ? 'lingot' : 'lingots';
-    const overlay = h('div', { class: 'overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Affaire classée' },
+    // Panneau qui monte du bas, sans voile : la balance résolue reste visible.
+    const overlay = h('div', { class: 'overlay', role: 'dialog', 'aria-label': 'Affaire classée' },
       h('div', { class: 'victory' },
-        h('span', { class: 'paper-label' }, 'Rapport final'),
-        stamp('Affaire classée', 'stamp-big'),
-        h('p', { class: 'victory-solution' }, `x = ${formatValue(value)}`),
-        h('p', { class: 'victory-worth' }, `La mallette vaut ${formatValue(value)} ${worth}.`),
-        stars(earned, 3, 'big'),
-        h('p', { class: 'victory-moves' }, `${guess ? 'Trouvé' : 'Résolu'} en ${n} ${unit}`),
+        h('div', { class: 'victory-head' },
+          h('div', {},
+            h('span', { class: 'paper-label' }, 'Rapport final'),
+            h('p', { class: 'victory-solution' }, `x = ${formatValue(value)}`),
+            h('p', { class: 'victory-worth' }, `La mallette vaut ${formatValue(value)} ${worth}.`)),
+          stamp('Affaire classée', 'stamp-big')),
+        h('div', { class: 'victory-score' },
+          stars(earned, 3, 'big'),
+          h('p', { class: 'victory-moves' }, `${guess ? 'Trouvé' : 'Résolu'} en ${n} ${unit}`)),
         advice,
         lvl.outro ? h('p', { class: 'victory-outro' }, lvl.outro) : null,
         h('div', { class: 'victory-actions' },
           h('button', { class: 'secondary', type: 'button', onclick: () => { overlay.remove(); replay(); } }, 'Rejouer'),
           h('a', { class: 'primary', href: next.href }, next.label))));
     screen.append(overlay);
-    overlay.querySelector('.primary').focus();
+    screen.classList.add('won');
+    // Laisse de quoi faire défiler la page au-dessus du panneau sur les petits écrans.
+    screen.style.setProperty('--sheet', `${overlay.firstChild.offsetHeight + 16}px`);
+    overlay.querySelector('.primary').focus({ preventScroll: true });
   }
 
   function replay() {
     won = false; busy = false;
+    screen.classList.remove('won');
     history = [start]; played = []; tries = 0;
     balance.resetBoxes(openCase ? 0 : null);
     if (guess) controls.reset();
