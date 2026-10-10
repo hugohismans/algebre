@@ -64,6 +64,8 @@ export function gameScreen(root, params) {
 
   /* ---------------------------------------------------------------- DOM */
   const balance = createBalance();
+  // En devinette, les mallettes sont ouvertes et vides : le joueur les remplit.
+  if (guess) balance.setBoxContents(0);
   const stage = h('div', { class: 'stage' }, balance.el);
   const counter = h('span', { class: 'counter', 'aria-live': 'polite' });
   const undoBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Annuler le dernier coup', title: 'Annuler (Z)', onclick: undo }, '↶');
@@ -158,16 +160,26 @@ export function gameScreen(root, params) {
 
   /* ---------------------------------------------------------------- devinette */
   function guessPanel() {
-    let value = 1;
-    const out = h('output', { class: 'guess-value', 'aria-live': 'polite' }, '1');
-    const set = (v) => { value = Math.max(0, Math.min(40, v)); out.textContent = String(value); };
+    let value = 0;
+    const out = h('output', { class: 'guess-value', 'aria-live': 'polite' }, '0');
+    // Chaque appui remplit (ou vide) les mallettes : on voit ce que contiendrait x.
+    const set = (v) => {
+      const next = Math.max(0, Math.min(40, v));
+      if (next === value || busy || won) return;
+      value = next;
+      out.textContent = String(value);
+      balance.setBoxContents(value);
+      balance.settle();
+    };
     const btn = (label, aria, d) => h('button', { class: 'round-btn', type: 'button', 'aria-label': aria, onclick: () => set(value + d) }, label);
     const tryBtn = h('button', { class: 'primary', type: 'button', onclick: () => tryValue(value) }, 'Tester');
-    return h('div', { class: 'guess' },
+    const panel = h('div', { class: 'guess' },
       h('div', { class: 'guess-row' },
         h('span', { class: 'guess-x' }, 'x ='),
         btn('−', 'Diminuer', -1), out, btn('+', 'Augmenter', 1)),
       tryBtn);
+    panel.reset = () => { value = 0; out.textContent = '0'; };
+    return panel;
   }
 
   async function tryValue(value) {
@@ -178,7 +190,7 @@ export function gameScreen(root, params) {
     const eq = current();
     const l = evaluate(eq.left, v), r = evaluate(eq.right, v);
     const c = F.cmp(l, r);
-    balance.setBoxLabel(String(value), 'pop');
+    balance.pulseBoxes();
     eqPrev.textContent = formatEquation(eq);
     typewrite(eqCurrent, `${substitute(eq.left, v)} ${c < 0 ? '<' : c > 0 ? '>' : '='} ${substitute(eq.right, v)}`);
     eqNote.textContent = `${formatValue(l)} ${c === 0 ? 'et' : 'contre'} ${formatValue(r)}`;
@@ -199,7 +211,7 @@ export function gameScreen(root, params) {
     update({ animateEq: false });
     if (guess) typewrite(eqCurrent, `x = ${formatValue(value)}`);
     await wait(550);
-    balance.setBoxLabel(formatValue(value), 'revealed');
+    balance.reveal(value);
     eqCurrent.classList.add('solved');
     const r = stage.getBoundingClientRect();
     confetti(r.left + r.width / 2, r.top + r.height * 0.45);
@@ -236,7 +248,8 @@ export function gameScreen(root, params) {
   function replay() {
     won = false; busy = false;
     history = [start]; played = []; tries = 0;
-    balance.setBoxLabel('x');
+    balance.resetBoxes(guess ? 0 : null);
+    if (guess) controls.reset();
     eqCurrent.classList.remove('solved');
     eqNote.textContent = '';
     update();

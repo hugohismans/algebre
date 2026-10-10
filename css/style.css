@@ -289,12 +289,24 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .case-band { fill: var(--case-dark); }
 .case-lock { fill: var(--brass-light); stroke: var(--brass-dark); stroke-width: 1; }
 .case-handle { fill: none; stroke: var(--case-dark); stroke-width: 3.5; stroke-linecap: round; }
-.box-label { fill: var(--on-desk); font: 700 17px var(--font-mono); }
+.box-label { fill: var(--on-desk); font: 700 19px var(--font-mono); }
 .item-box.pop .box-label, .item-box.revealed .box-label {
   animation: label-pop .45s cubic-bezier(.3, 1.6, .5, 1); transform-box: fill-box; transform-origin: center;
 }
 .item-box.revealed .box-label { fill: var(--gold); font-size: 19px; }
-.item-box.revealed .case-lock { fill: var(--green); }
+/* mallette ouverte : on voit les lingots à l'intérieur */
+.case-window { fill: #fbf3dc; stroke: var(--case-dark); stroke-width: 1; }
+.mini-ingot { fill: var(--gold); stroke: var(--gold-dark); stroke-width: .6; }
+.mini-new { animation: mini-drop .4s cubic-bezier(.3, 1.5, .5, 1) both; transform-box: fill-box; }
+@keyframes mini-drop { from { transform: translateY(-22px); opacity: 0; } 60% { opacity: 1; } }
+.case-badge { fill: var(--brass-light); stroke: var(--brass-dark); stroke-width: 1.5; }
+.case-badge-text { fill: var(--ink); font: 700 12px var(--font-mono); }
+.item-box.pop .case-badge, .item-box.pop .case-badge-text,
+.item-box.revealed .case-badge, .item-box.revealed .case-badge-text {
+  animation: label-pop .45s cubic-bezier(.3, 1.6, .5, 1); transform-box: fill-box; transform-origin: center;
+}
+.item-box.revealed .case-body { fill: var(--green); stroke: #1d5c40; }
+.item-box.revealed .case-badge { fill: var(--gold); }
 @keyframes label-pop { from { transform: scale(.2); } to { transform: none; } }
 .ingot-body { fill: var(--gold); stroke: var(--gold-dark); stroke-width: 1.2; stroke-linejoin: round; }
 .ingot-top { fill: var(--gold-light); }

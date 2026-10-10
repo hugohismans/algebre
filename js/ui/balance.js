@@ -8,7 +8,8 @@
  *   b.setEquation(eq);          // met à jour les plateaux (animé)
  *   b.reject(['left']);         // penche puis revient (action refusée)
  *   b.lean(angle);              // penche durablement (mode devinette)
- *   b.setBoxLabel('4', cls);    // écrit une valeur sur les mallettes
+ *   b.setBoxContents(4);        // ouvre les mallettes : on voit 4 lingots dedans
+ *   b.reveal(value);            // victoire : montre ce que vaut x
  */
 import { s, reducedMotion } from './dom.js';
 import { F, formatMember } from '../engine/index.js';
@@ -23,7 +24,7 @@ const MAX_ANGLE = 13;
 const GAUGE_R = 44;       // rayon du cadran central
 
 const ITEM = {
-  box: { w: 38, h: 38, gap: 5 },
+  box: { w: 46, h: 44, gap: 4 },
   unit: { w: 24, h: 13, gap: 2 },
   ten: { w: 50, h: 15, gap: 2 },
   balloon: { w: 22, h: 26, gap: 3 },
@@ -32,15 +33,62 @@ const ITEM = {
 
 /* ------------------------------------------------------------- dessin des objets */
 
-/** La mallette x : une mallette scellée, poignée et serrure en laiton. */
-function drawBox(label) {
+/** Au-delà, la mallette ouverte n'affiche plus son contenu un par un. */
+const MAX_INSIDE = 40;
+
+/** Lingots miniatures rangés au fond de la mallette ouverte, du bas vers le haut. */
+function insideLayout(n, iw, ih) {
+  if (n <= 0) return [];
+  let best = null;
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const w = Math.min(12, (iw - (cols - 1)) / cols, ((ih - (rows - 1)) / rows) * 1.8);
+    // À taille égale, on préfère des rangées larges, comme sur les plateaux.
+    if (!best || w >= best.w) best = { cols, w };
+  }
+  const { cols, w } = best, hgt = w / 1.8;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const row = Math.floor(i / cols), col = i % cols;
+    const inRow = Math.min(cols, n - row * cols);
+    out.push({ x: -((inRow * w + (inRow - 1)) / 2) + col * (w + 1), y: -row * (hgt + 1) - hgt, w, h: hgt });
+  }
+  return out;
+}
+
+/**
+ * La mallette x. Scellée, elle porte son étiquette (« x », ou une valeur).
+ * Ouverte (contents = nombre), on voit les lingots qu'elle contient : ceux qui
+ * arrivent (au-delà de prev) tombent dedans.
+ */
+function drawBox({ label, contents }, prev = contents) {
   const { w, h } = ITEM.box;
+  const handle = s('path', { class: 'case-handle', d: `M-7 ${-h + 7} v-4 q0 -4 4 -4 h6 q4 0 4 4 v4` });
+  if (contents == null) {
+    return [
+      handle,
+      s('rect', { class: 'case-body', x: -w / 2, y: -h + 7, width: w, height: h - 7, rx: 4 }),
+      s('rect', { class: 'case-band', x: -w / 2, y: -h + 13, width: w, height: 3 }),
+      s('rect', { class: 'case-lock', x: -4, y: -h + 10, width: 8, height: 8, rx: 1.5 }),
+      s('text', { class: 'box-label', x: 0, y: -5, 'text-anchor': 'middle' }, label),
+    ];
+  }
+  const iw = w - 6, ih = h - 13;
+  const minis = insideLayout(Math.min(contents, MAX_INSIDE), iw, ih).map((m, i) => {
+    const el = s('rect', { class: 'mini-ingot', x: m.x, y: -3 + m.y, width: m.w, height: m.h, rx: 1 });
+    if (i >= prev) {
+      el.classList.add('mini-new');
+      el.style.animationDelay = `${Math.min(i - prev, 12) * 45}ms`;
+    }
+    return el;
+  });
   return [
-    s('path', { class: 'case-handle', d: `M-7 ${-h + 7} v-4 q0 -4 4 -4 h6 q4 0 4 4 v4` }),
+    handle,
     s('rect', { class: 'case-body', x: -w / 2, y: -h + 7, width: w, height: h - 7, rx: 4 }),
-    s('rect', { class: 'case-band', x: -w / 2, y: -h + 13, width: w, height: 3 }),
-    s('rect', { class: 'case-lock', x: -4, y: -h + 10, width: 8, height: 8, rx: 1.5 }),
-    s('text', { class: 'box-label', x: 0, y: -5, 'text-anchor': 'middle' }, label),
+    s('rect', { class: 'case-window', x: -iw / 2, y: -h + 10, width: iw, height: ih + 1, rx: 2 }),
+    ...minis,
+    s('circle', { class: 'case-badge', cx: w / 2 - 1, cy: -h + 8, r: 8.5 }),
+    s('text', { class: 'case-badge-text', x: w / 2 - 1, y: -h + 11.5, 'text-anchor': 'middle' }, String(contents)),
   ];
 }
 
@@ -211,7 +259,7 @@ export function createBalance() {
   setTarget(0);
 
   /* ---- objets */
-  function render(side, m, labels) {
+  function render(side, m) {
     const items = itemsOf(m);
     const { pos, scale } = layout(items);
     const stack = stacks[side];
@@ -226,7 +274,7 @@ export function createBalance() {
         el.style.transitionDelay = '0ms';
       } else {
         if (el) { before.delete(it.key); el.remove(); }
-        const parts = it.kind === 'box' ? drawBox(labels.box)
+        const parts = it.kind === 'box' ? drawBox(box)
           : it.kind === 'unit' ? drawUnit()
           : it.kind === 'ten' ? drawTen()
           : it.kind === 'balloon' ? drawBalloon()
@@ -256,13 +304,27 @@ export function createBalance() {
     current[side] = after;
   }
 
-  let labels = { box: 'x' };
+  /** État commun à toutes les mallettes (elles sont identiques). */
+  const box = { label: 'x', contents: null };
+  function eachBox(fn) {
+    for (const side of ['left', 'right']) {
+      for (const el of current[side].values()) if (el.dataset.kind === 'box') fn(el);
+    }
+  }
+  function repaintBoxes(prev, cls) {
+    eachBox((el) => {
+      el.replaceChildren(...drawBox(box, prev));
+      el.classList.remove('pop', 'revealed');
+      el.getBoundingClientRect();
+      if (cls) el.classList.add(cls);
+    });
+  }
 
   return {
     el: svg,
     setEquation(eq) {
-      render('left', eq.left, labels);
-      render('right', eq.right, labels);
+      render('left', eq.left);
+      render('right', eq.right);
     },
     /** Action refusée : le côté fautif s'enfonce, puis la balance revient. */
     reject(sides) {
@@ -275,18 +337,34 @@ export function createBalance() {
     /** Penche selon l'écart de poids (droite − gauche). */
     lean(diff) { setTarget(Math.sign(diff) * Math.min(MAX_ANGLE, 4 + Math.abs(diff) * 2.5)); },
     settle() { setTarget(0); },
-    /** Écrit une valeur dans les boîtes (devinette ou victoire). */
-    setBoxLabel(text, cls) {
-      labels = { box: text };
-      for (const side of ['left', 'right']) {
-        for (const el of current[side].values()) {
-          if (el.dataset.kind !== 'box') continue;
-          el.querySelector('.box-label').textContent = text;
-          el.classList.remove('pop', 'revealed');
-          el.getBoundingClientRect();
-          if (cls) el.classList.add(cls);
-        }
+    /**
+     * Ouvre les mallettes et y montre n lingots (null : les referme).
+     * Les lingots ajoutés depuis l'appel précédent tombent dedans.
+     */
+    setBoxContents(n, cls) {
+      const prev = box.contents ?? 0;
+      box.contents = n;
+      repaintBoxes(n == null ? 0 : prev, cls);
+    },
+    /** Victoire : on ouvre les mallettes, ou on écrit la valeur si elle ne se compte pas en lingots. */
+    reveal(value) {
+      if (F.isInt(value) && F.sign(value) >= 0 && F.toNumber(value) <= MAX_INSIDE) {
+        this.setBoxContents(F.toNumber(value), 'revealed');
+      } else {
+        box.contents = null;
+        box.label = F.toString(value);
+        repaintBoxes(0, 'revealed');
       }
+    },
+    /** Remet les mallettes dans leur état de départ (scellées, ou ouvertes avec n lingots). */
+    resetBoxes(contents = null) {
+      box.label = 'x';
+      box.contents = contents;
+      repaintBoxes(contents ?? 0);
+    },
+    /** Petit sursaut des mallettes (au moment de peser). */
+    pulseBoxes() {
+      eachBox((el) => { el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); });
     },
   };
 }
