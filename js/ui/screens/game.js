@@ -64,8 +64,9 @@ export function gameScreen(root, params) {
 
   /* ---------------------------------------------------------------- DOM */
   const balance = createBalance();
-  // En devinette, les mallettes sont ouvertes et vides : le joueur les remplit.
-  if (guess) balance.setBoxContents(0);
+  // Premières devinettes : mallettes ouvertes et vides, que le joueur remplit.
+  const openCase = guess && !!lvl.openCase;
+  if (openCase) balance.setBoxContents(0);
   const stage = h('div', { class: 'stage' }, balance.el);
   const counter = h('span', { class: 'counter', 'aria-live': 'polite' });
   const undoBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Annuler le dernier coup', title: 'Annuler (Z)', onclick: undo }, '↶');
@@ -162,13 +163,15 @@ export function gameScreen(root, params) {
   function guessPanel() {
     let value = 0;
     const out = h('output', { class: 'guess-value', 'aria-live': 'polite' }, '0');
-    // Chaque appui remplit (ou vide) les mallettes : on voit ce que contiendrait x.
+    // Mallette ouverte : chaque appui la remplit (ou la vide). Fermée : elle
+    // redevient « x » jusqu'au prochain test.
     const set = (v) => {
       const next = Math.max(0, Math.min(40, v));
       if (next === value || busy || won) return;
       value = next;
       out.textContent = String(value);
-      balance.setBoxContents(value);
+      if (openCase) balance.setBoxContents(value);
+      else balance.labelBoxes('x');
       balance.settle();
     };
     const btn = (label, aria, d) => h('button', { class: 'round-btn', type: 'button', 'aria-label': aria, onclick: () => set(value + d) }, label);
@@ -190,7 +193,8 @@ export function gameScreen(root, params) {
     const eq = current();
     const l = evaluate(eq.left, v), r = evaluate(eq.right, v);
     const c = F.cmp(l, r);
-    balance.pulseBoxes();
+    if (openCase) balance.pulseBoxes();
+    else balance.labelBoxes(String(value), 'pop');
     eqPrev.textContent = formatEquation(eq);
     typewrite(eqCurrent, `${substitute(eq.left, v)} ${c < 0 ? '<' : c > 0 ? '>' : '='} ${substitute(eq.right, v)}`);
     eqNote.textContent = `${formatValue(l)} ${c === 0 ? 'et' : 'contre'} ${formatValue(r)}`;
@@ -248,7 +252,7 @@ export function gameScreen(root, params) {
   function replay() {
     won = false; busy = false;
     history = [start]; played = []; tries = 0;
-    balance.resetBoxes(guess ? 0 : null);
+    balance.resetBoxes(openCase ? 0 : null);
     if (guess) controls.reset();
     eqCurrent.classList.remove('solved');
     eqNote.textContent = '';

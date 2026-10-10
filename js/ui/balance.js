@@ -9,6 +9,7 @@
  *   b.reject(['left']);         // penche puis revient (action refusée)
  *   b.lean(angle);              // penche durablement (mode devinette)
  *   b.setBoxContents(4);        // ouvre les mallettes : on voit 4 lingots dedans
+ *   b.labelBoxes('4', 'pop');   // mallettes fermées, étiquetées « 4 »
  *   b.reveal(value);            // victoire : montre ce que vaut x
  */
 import { s, reducedMotion } from './dom.js';
@@ -345,6 +346,12 @@ export function createBalance() {
       const prev = box.contents ?? 0;
       box.contents = n;
       repaintBoxes(n == null ? 0 : prev, cls);
+    },
+    /** Mallettes scellées avec une étiquette (« x », ou la valeur qu'on teste). */
+    labelBoxes(text, cls) {
+      box.contents = null;
+      box.label = text;
+      repaintBoxes(0, cls);
     },
     /** Victoire : on ouvre les mallettes, ou on écrit la valeur si elle ne se compte pas en lingots. */
     reveal(value) {
