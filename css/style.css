@@ -203,6 +203,12 @@ a.folder:active { transform: scale(.985); }
 
 /* ------------------------------------------------------------------ missions */
 .world-intro { margin: 0 0 16px; color: var(--on-desk-soft); }
+.world-briefing {
+  margin: 0 0 18px; padding: 12px 14px; border-radius: var(--radius);
+  background-color: var(--paper); color: var(--ink); box-shadow: var(--shadow);
+  transform: rotate(-.4deg);
+}
+.world-briefing p { margin: 4px 0 0; font: 15px/1.4 var(--font-mono); }
 .tags { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .tags li:nth-child(odd) .evidence { transform: rotate(-1deg); }
 .tags li:nth-child(even) .evidence { transform: rotate(.8deg); }
@@ -424,6 +430,11 @@ a.evidence:hover { transform: rotate(0) translateY(-2px) !important; }
 .victory-worth { margin: 6px 0 12px; font: 16px var(--font-mono); color: var(--ink-soft); }
 .victory-moves { margin: 10px 0 0; font: 700 16px var(--font-mono); }
 .advice { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+.victory-outro {
+  margin: 12px 0 0; padding: 10px 12px; text-align: left;
+  border-left: 4px solid var(--red); background: rgba(200, 55, 45, .07);
+  font: 14px/1.4 var(--font-mono);
+}
 .victory-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
 @keyframes fade { from { opacity: 0; } }
 

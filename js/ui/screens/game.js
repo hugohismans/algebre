@@ -242,6 +242,7 @@ export function gameScreen(root, params) {
         stars(earned, 3, 'big'),
         h('p', { class: 'victory-moves' }, `${guess ? 'Trouvé' : 'Résolu'} en ${n} ${unit}`),
         advice,
+        lvl.outro ? h('p', { class: 'victory-outro' }, lvl.outro) : null,
         h('div', { class: 'victory-actions' },
           h('button', { class: 'secondary', type: 'button', onclick: () => { overlay.remove(); replay(); } }, 'Rejouer'),
           h('a', { class: 'primary', href: next.href }, next.label))));

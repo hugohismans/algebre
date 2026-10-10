@@ -1,7 +1,9 @@
 /**
  * Catalogue des mondes. Un niveau est une donnée pure :
- *   { id, start: '2x+1=9', cards: ['-1', '/2'], par, intro?, mode?: 'guess' }
- * Le monde fournit les règles (negatives, fractions) et l'affichage
+ *   { id, start: '2x+1=9', cards: ['-1', '/2'], par, intro?, outro?, mode?: 'guess' }
+ * intro : briefing affiché au début ; outro : message du rapport de victoire.
+ * Le monde peut avoir un briefing (écran des missions). Il fournit les règles
+ * (negatives, fractions) et l'affichage
  * ('full' | 'mixed' | 'symbolic'). Un niveau peut surcharger rules et display.
  * Ce format servira tel quel au futur mode création (énigme encodée dans l'URL).
  */

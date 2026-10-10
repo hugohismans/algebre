@@ -10,7 +10,7 @@ export default {
   display: 'full',
   levels: [
     { id: '2-1', start: 'x+3=7', cards: ['-3'], par: 1,
-      intro: 'Règle d\'or : ce que tu fais d\'un côté, tu le fais de l\'autre. Glisse la carte sur la balance (ou touche-la) : elle retire 3 lingots de chaque plateau. Objectif : laisser la mallette seule.' },
+      intro: 'Fini le tâtonnement : voici ton premier outil, une carte. Règle d\'or : ce que tu fais d\'un côté, tu le fais de l\'autre. Glisse la carte sur la balance (ou touche-la) : elle retire 3 lingots de chaque plateau. Objectif : laisser la mallette seule.' },
     { id: '2-2', start: 'x+5=9', cards: ['-2', '-5'], par: 1,
       intro: 'Choisis la bonne carte. Tu peux annuler autant que tu veux, sans pénalité.' },
     { id: '2-3', start: 'x+4=6', cards: ['-6', '-4'], par: 1,

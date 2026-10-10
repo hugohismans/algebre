@@ -8,14 +8,15 @@
 export default {
   id: 1,
   title: 'La mallette',
-  subtitle: 'Devine ce que vaut x',
+  subtitle: 'Essais et erreurs : forge ton intuition',
+  briefing: 'Première étape de ta formation, agent : développer ton intuition d\'enquêteur. Ici, pas encore d\'outils. Tu proposes une valeur, la balance te dit si tu fais fausse route, et tu recommences : on avance par essais et erreurs. Plus tard, le QG te confiera des outils bien plus efficaces pour mener l\'enquête.',
   rules: { negatives: false, fractions: false },
   display: 'full',
   levels: [
     { id: '1-1', mode: 'guess', openCase: true, start: 'x+3=7', par: 2,
-      intro: 'Agent, une mallette a été saisie. Nom de code : x. Chaque lingot vaut 1, et la balance est à l\'équilibre. Remplis la mallette avec + et −, puis teste : combien vaut-elle ?' },
+      intro: 'Bienvenue à l\'Agence, recrue. Pour commencer, on entraîne ton intuition : pas d\'outils, juste des essais. Une mallette a été saisie, nom de code x. Chaque lingot vaut 1 et la balance est à l\'équilibre. Remplis la mallette avec + et −, puis teste : combien vaut-elle ?' },
     { id: '1-2', mode: 'guess', openCase: true, start: 'x+1=5', par: 2,
-      intro: 'Propose une valeur et teste-la. Si tu te trompes, la balance penche : c\'est un indice.' },
+      intro: 'Se tromper fait partie de l\'enquête : si la balance penche, c\'est un indice. Tiens-en compte et réessaie.' },
     { id: '1-3', mode: 'guess', openCase: true, start: '6=x+2', par: 2,
       intro: 'Cette fois, la mallette est sur le plateau de droite. Même méthode.' },
     { id: '1-4', mode: 'guess', openCase: true, start: 'x+5=9', par: 2 },
@@ -24,6 +25,7 @@ export default {
     { id: '1-6', mode: 'guess', start: '2x+2=10', par: 3 },
     { id: '1-7', mode: 'guess', start: '3x=12', par: 3 },
     { id: '1-8', mode: 'guess', start: '2x+1=x+5', par: 3,
-      intro: 'Des mallettes des deux côtés ! Elles sont toutes identiques.' },
+      intro: 'Dernière épreuve de ta formation : des mallettes des deux côtés, toutes identiques. Tâtonner devient long, non ? Le QG prépare de quoi t\'aider.',
+      outro: 'Intuition validée ! Les essais finissent par payer, mais ils prennent du temps. Dans le dossier suivant, le QG te confie tes premiers vrais outils : les cartes d\'opération.' },
   ],
 };

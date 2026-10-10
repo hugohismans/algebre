@@ -30,6 +30,10 @@ export function levelsScreen(root, { world: worldId }) {
         h('span', { class: 'kicker' }, `Dossier ${String(world.id).padStart(2, '0')}`),
         h('span', {}, world.title)),
       h('span', { class: 'topbar-stars' }, `${worldStars(world)} / ${world.levels.length * 3} ★`)),
-    h('p', { class: 'world-intro' }, world.subtitle),
+    world.briefing
+      ? h('div', { class: 'world-briefing', role: 'note' },
+        h('span', { class: 'paper-label' }, 'Briefing du dossier'),
+        h('p', {}, world.briefing))
+      : h('p', { class: 'world-intro' }, world.subtitle),
     grid));
 }
