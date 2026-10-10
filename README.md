@@ -59,7 +59,9 @@ Cartes : `+3` `-3` `*2` `/2` `-x` `-2x` (retirer des mallettes) `+x` `dist` (ouv
 Modes : `mode: 'guess'` (devinette, dossier 1, avec `openCase` pour la mallette ouverte),
 `mode: 'build'` avec `story` (témoignage à mettre en équation, dossier 7).
 
-Pour tester sans tout jouer : ajouter `?code=007` à l'adresse ouvre tous les dossiers.
+Pour tester sans tout jouer (enseignants) : activer « Mode enseignant » en bas de l'accueil
+ouvre tous les dossiers et missions, sans toucher à la progression. Le réglage est mémorisé
+dans le navigateur. Ajouter `?code=007` à l'adresse fait de même, le temps de la visite.
 Les règles du monde (`negatives`, `fractions`) disent ce que la balance autorise.
 Lancer les tests : ils signalent un par faux ou un niveau impossible.
 

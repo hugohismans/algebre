@@ -1,7 +1,7 @@
 /** Écran d'accueil : les dossiers (mondes) de l'agence. */
 import { h, s, star, stamp, redacted } from '../dom.js';
 import { WORLDS } from '../../levels/index.js';
-import { worldStars, worldUnlocked, worldDone, totalStars } from '../../state/progress.js';
+import { worldStars, worldUnlocked, worldDone, totalStars, unlockAllEnabled, setUnlockAll } from '../../state/progress.js';
 import { GAME_TITLE } from '../../config.js';
 
 /** Logo : une loupe sur l'inconnue x. */
@@ -36,12 +36,32 @@ export function worldsScreen(root) {
         ? h('a', { class: `folder world-${w.id}${done ? ' done' : ''}`, href: `#/monde/${w.id}` }, inner)
         : h('div', { class: `folder world-${w.id} locked`, 'aria-disabled': 'true' }, inner)));
   }
-  root.append(h('main', { class: 'screen screen-worlds' },
+  const teacher = unlockAllEnabled();
+  const toggle = h('input', { type: 'checkbox', role: 'switch', class: 'switch-input', id: 'teacher-mode' });
+  toggle.checked = teacher;
+  toggle.addEventListener('change', () => {
+    setUnlockAll(toggle.checked);
+    // On redessine l'accueil sur place, sans perdre la position de défilement.
+    const y = window.scrollY;
+    root.replaceChildren();
+    worldsScreen(root);
+    window.scrollTo(0, y);
+    document.getElementById('teacher-mode')?.focus();
+  });
+  root.append(h('main', { class: `screen screen-worlds${teacher ? ' teacher' : ''}` },
     h('header', { class: 'hero' },
       logo(),
       h('p', { class: 'hero-kicker' }, 'Agence des affaires inconnues'),
       h('h1', {}, GAME_TITLE),
       h('p', { class: 'tagline' }, 'Chaque équation cache une inconnue. Ta mission : découvrir ce que vaut x, sans jamais déséquilibrer la balance.'),
-      h('p', { class: 'total' }, star(true), ` ${totalStars()} / ${max}`)),
-    list));
+      h('p', { class: 'total' }, star(true), ` ${totalStars()} / ${max}`),
+      teacher ? h('p', { class: 'teacher-badge' }, stamp('Mode enseignant', 'stamp-teacher')) : null),
+    list,
+    h('section', { class: 'teacher-panel', 'aria-label': 'Mode enseignant' },
+      h('label', { class: 'switch', for: 'teacher-mode' },
+        toggle,
+        h('span', { class: 'switch-track', 'aria-hidden': 'true' }, h('span', { class: 'switch-thumb' })),
+        h('span', { class: 'switch-text' },
+          h('strong', {}, 'Mode enseignant'),
+          h('span', {}, 'Débloque tous les dossiers et toutes les missions pour tester. La progression est conservée.'))))));
 }
