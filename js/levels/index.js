@@ -15,11 +15,11 @@ const upcoming = (id, title, subtitle) => ({
 export const WORLDS = [
   world1,
   world2,
-  upcoming(3, 'Deux étapes', 'Défaire les opérations dans le bon ordre'),
-  upcoming(4, 'Boîtes des deux côtés', 'Rassembler les boîtes'),
-  upcoming(5, 'Les négatifs', 'Ballons et poids s\'annulent'),
-  upcoming(6, 'Les parenthèses', 'Des sacs pleins d\'objets'),
-  upcoming(7, 'Mise en équation', 'Du problème à la balance'),
+  upcoming(3, 'Double fond', 'Deux étapes, dans le bon ordre'),
+  upcoming(4, 'Agents doubles', 'Des x des deux côtés'),
+  upcoming(5, 'Ballons espions', 'Ils allègent : les nombres négatifs'),
+  upcoming(6, 'Plis scellés', 'Les parenthèses'),
+  upcoming(7, 'Témoignages', 'Du récit à l\'équation'),
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === Number(id));

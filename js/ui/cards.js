@@ -8,13 +8,13 @@ const FAMILY = { add: 'weights', sub: 'weights', mul: 'scale', div: 'scale', add
 function caption(op) {
   const n = op.n ? F.toNumber(op.n) : 0;
   switch (op.type) {
-    case 'add': return `ajouter ${n} poids`;
-    case 'sub': return `retirer ${n} poids`;
+    case 'add': return `ajouter ${n} lingot${n > 1 ? 's' : ''}`;
+    case 'sub': return `retirer ${n} lingot${n > 1 ? 's' : ''}`;
     case 'mul': return `multiplier par ${n}`;
     case 'div': return `partager en ${n}`;
-    case 'addX': return n === 1 ? 'ajouter une boîte' : `ajouter ${n} boîtes`;
-    case 'removeX': return n === 1 ? 'retirer une boîte' : `retirer ${n} boîtes`;
-    case 'distribute': return 'vider les sacs';
+    case 'addX': return n === 1 ? 'ajouter une mallette' : `ajouter ${n} mallettes`;
+    case 'removeX': return n === 1 ? 'retirer une mallette' : `retirer ${n} mallettes`;
+    case 'distribute': return 'ouvrir les plis';
     default: return '';
   }
 }

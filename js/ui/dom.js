@@ -40,3 +40,32 @@ export function stars(n, total = 3, cls = '') {
   return h('span', { class: `stars ${cls}`, 'aria-label': `${n} étoile${n > 1 ? 's' : ''} sur ${total}` },
     Array.from({ length: total }, (_, i) => star(i < n)));
 }
+
+/** Texte caviardé : des barres noires à la place des mots (dossiers verrouillés). */
+export function redacted(text) {
+  return h('span', { class: 'redacted', 'aria-label': 'Classifié' }, text);
+}
+
+/** Tampon encreur (CLASSÉ, REFUSÉ…). */
+export function stamp(text, cls = '') {
+  return h('span', { class: `stamp ${cls}` }, text);
+}
+
+/**
+ * Écrit un texte à la machine, lettre par lettre. Un nouvel appel sur le même
+ * élément interrompt le précédent.
+ */
+export function typewrite(el, text, speed = 22) {
+  const token = (el.__typing = (el.__typing ?? 0) + 1);
+  if (reducedMotion() || !text) { el.textContent = text; return; }
+  el.textContent = '';
+  el.classList.add('typing');
+  let i = 0;
+  const step = () => {
+    if (el.__typing !== token) return;
+    el.textContent = text.slice(0, ++i);
+    if (i < text.length) setTimeout(step, speed);
+    else el.classList.remove('typing');
+  };
+  step();
+}

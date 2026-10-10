@@ -66,19 +66,3 @@ export function formatOp(op) {
     default: return '?';
   }
 }
-
-/** Phrase décrivant l'opération, pour le fil de résolution. */
-export function describeOp(op) {
-  const n = op.n ? F.toNumber(F.abs(op.n)) : 0;
-  const s = n > 1 ? 's' : '';
-  switch (op.type) {
-    case 'add': return `on ajoute ${fracText(op.n)} poids de chaque côté`;
-    case 'sub': return `on retire ${fracText(op.n)} poids de chaque côté`;
-    case 'mul': return `on multiplie chaque côté par ${formatValue(op.n)}`;
-    case 'div': return `on divise chaque côté par ${formatValue(op.n)}`;
-    case 'addX': return n === 1 ? 'on ajoute une boîte de chaque côté' : `on ajoute ${n} boîte${s} de chaque côté`;
-    case 'removeX': return n === 1 ? 'on retire une boîte de chaque côté' : `on retire ${n} boîte${s} de chaque côté`;
-    case 'distribute': return 'on vide les sacs';
-    default: return '';
-  }
-}

@@ -1,14 +1,14 @@
 /**
- * Balance de Roberval en SVG : deux plateaux qui restent horizontaux, posés sur
+ * Balance de Roberval en SVG, en laiton, avec un cadran d'équilibre au centre : deux plateaux qui restent horizontaux, posés sur
  * un fléau qui pivote. Le fléau suit un ressort amorti, d'où l'oscillation douce.
- * Les objets (boîtes, poids) s'empilent sur les plateaux ; ceux qui arrivent
+ * Les objets (mallettes x, lingots) s'empilent sur les plateaux ; ceux qui arrivent
  * tombent, ceux qui partent s'envolent.
  *
  *   const b = createBalance();
  *   b.setEquation(eq);          // met à jour les plateaux (animé)
  *   b.reject(['left']);         // penche puis revient (action refusée)
  *   b.lean(angle);              // penche durablement (mode devinette)
- *   b.reveal(value);            // montre la valeur dans les boîtes
+ *   b.setBoxLabel('4', cls);    // écrit une valeur sur les mallettes
  */
 import { s, reducedMotion } from './dom.js';
 import { F, formatMember } from '../engine/index.js';
@@ -20,39 +20,45 @@ const STEM = 20;           // hauteur des tiges sous les plateaux
 const PLATE_W = 132;
 const MAX_STACK = 172;     // hauteur disponible au-dessus d'un plateau
 const MAX_ANGLE = 13;
+const GAUGE_R = 44;       // rayon du cadran central
 
 const ITEM = {
-  box: { w: 36, h: 36, gap: 5 },
-  unit: { w: 22, h: 17, gap: 3 },
-  ten: { w: 47, h: 17, gap: 3 },
+  box: { w: 38, h: 38, gap: 5 },
+  unit: { w: 24, h: 13, gap: 2 },
+  ten: { w: 50, h: 15, gap: 2 },
   balloon: { w: 22, h: 26, gap: 3 },
   bag: { w: 60, h: 46, gap: 6 },
 };
 
 /* ------------------------------------------------------------- dessin des objets */
 
+/** La mallette x : une mallette scellée, poignée et serrure en laiton. */
 function drawBox(label) {
   const { w, h } = ITEM.box;
   return [
-    s('rect', { class: 'box-body', x: -w / 2, y: -h, width: w, height: h, rx: 7 }),
-    s('rect', { class: 'box-lid', x: -w / 2 - 2, y: -h, width: w + 4, height: 9, rx: 4 }),
-    s('text', { class: 'box-label', x: 0, y: -h / 2 + 7, 'text-anchor': 'middle' }, label),
+    s('path', { class: 'case-handle', d: `M-7 ${-h + 7} v-4 q0 -4 4 -4 h6 q4 0 4 4 v4` }),
+    s('rect', { class: 'case-body', x: -w / 2, y: -h + 7, width: w, height: h - 7, rx: 4 }),
+    s('rect', { class: 'case-band', x: -w / 2, y: -h + 13, width: w, height: 3 }),
+    s('rect', { class: 'case-lock', x: -4, y: -h + 10, width: 8, height: 8, rx: 1.5 }),
+    s('text', { class: 'box-label', x: 0, y: -5, 'text-anchor': 'middle' }, label),
   ];
 }
 
+/** Un lingot d'or, qui vaut 1. */
 function drawUnit() {
   const { w, h } = ITEM.unit;
   return [
-    s('rect', { class: 'unit-body', x: -w / 2, y: -h, width: w, height: h, rx: 5 }),
-    s('rect', { class: 'unit-shine', x: -w / 2 + 4, y: -h + 3, width: w - 8, height: 3, rx: 1.5 }),
+    s('path', { class: 'ingot-body', d: `M${-w / 2} 0 h${w} l-4 ${-h} h${-w + 8}z` }),
+    s('path', { class: 'ingot-top', d: `M${-w / 2 + 4} ${-h} h${w - 8} l-1.5 3 h${-w + 11}z` }),
   ];
 }
 
+/** Un gros lingot qui vaut 10 (au-delà de 20 lingots). */
 function drawTen() {
   const { w, h } = ITEM.ten;
   return [
-    s('rect', { class: 'unit-body', x: -w / 2, y: -h, width: w, height: h, rx: 5 }),
-    s('text', { class: 'unit-label', x: 0, y: -4.5, 'text-anchor': 'middle' }, '10'),
+    s('path', { class: 'ingot-body', d: `M${-w / 2} 0 h${w} l-4 ${-h} h${-w + 8}z` }),
+    s('text', { class: 'ingot-label', x: 0, y: -4.5, 'text-anchor': 'middle' }, '10'),
   ];
 }
 
@@ -129,12 +135,33 @@ export function createBalance() {
   const plateGroups = {}, stacks = {}, current = { left: new Map(), right: new Map() };
 
   const beam = s('g', { class: 'beam' },
+    s('path', { class: 'needle', d: `M${PIVOT.x - 3} ${PIVOT.y} L${PIVOT.x} ${PIVOT.y - GAUGE_R + 4} L${PIVOT.x + 3} ${PIVOT.y}z` }),
     s('rect', { class: 'beam-bar', x: PIVOT.x - ARM - 6, y: PIVOT.y - 5, width: ARM * 2 + 12, height: 10, rx: 5 }),
   );
+  // Cadran gradué derrière l'aiguille : l'équilibre se lit au centre.
+  const ticks = [];
+  for (let a = -30; a <= 30; a += 7.5) {
+    const r = (a - 90) * Math.PI / 180, long = a === 0;
+    const r1 = GAUGE_R - (long ? 10 : 6), r2 = GAUGE_R;
+    ticks.push(s('line', {
+      class: long ? 'tick tick-zero' : 'tick',
+      x1: PIVOT.x + r1 * Math.cos(r), y1: PIVOT.y + r1 * Math.sin(r),
+      x2: PIVOT.x + r2 * Math.cos(r), y2: PIVOT.y + r2 * Math.sin(r),
+    }));
+  }
+  const arc = (rad) => {
+    const p = (a) => [PIVOT.x + rad * Math.cos((a - 90) * Math.PI / 180), PIVOT.y + rad * Math.sin((a - 90) * Math.PI / 180)];
+    const [x1, y1] = p(-36), [x2, y2] = p(36);
+    return `M${x1} ${y1} A${rad} ${rad} 0 0 1 ${x2} ${y2}`;
+  };
+  const gauge = s('g', { class: 'gauge' },
+    s('path', { class: 'gauge-face', d: `${arc(GAUGE_R + 6)} L${PIVOT.x} ${PIVOT.y}z` }),
+    ticks);
   const svg = s('svg', { class: 'balance', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Balance' },
     s('ellipse', { class: 'shadow', cx: PIVOT.x, cy: H - 10, rx: 120, ry: 8 }),
     s('path', { class: 'stand', d: `M${PIVOT.x - 70} ${H - 12} q0 -16 16 -18 h108 q16 2 16 18z` }),
     s('rect', { class: 'stand', x: PIVOT.x - 7, y: PIVOT.y, width: 14, height: H - 30 - PIVOT.y + 4 }),
+    gauge,
     beam,
   );
   for (const side of ['left', 'right']) {
@@ -229,7 +256,7 @@ export function createBalance() {
     current[side] = after;
   }
 
-  let labels = { box: '?' };
+  let labels = { box: 'x' };
 
   return {
     el: svg,

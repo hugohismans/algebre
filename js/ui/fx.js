@@ -1,9 +1,9 @@
 /** Effets : confettis de victoire, petit message éphémère. */
 import { h, reducedMotion } from './dom.js';
 
-const COLORS = ['#7c5cff', '#ff9f43', '#12b5a5', '#ff5d73', '#ffd23f'];
+const COLORS = ['#f2c14e', '#e8d9b0', '#c8372d', '#f7e7b4', '#2f3542'];
 
-/** Pluie de confettis partant d'un point de l'écran. */
+/** Pluie de confettis (paillettes d'or et bouts de papier) partant d'un point. */
 export function confetti(x, y, count = 36) {
   if (reducedMotion()) return;
   const layer = h('div', { class: 'confetti', 'aria-hidden': 'true' });
@@ -24,9 +24,10 @@ export function confetti(x, y, count = 36) {
 }
 
 /** Message éphémère (refus d'une carte, indice). Un seul à la fois par conteneur. */
-export function toast(container, text, kind = 'info') {
+export function toast(container, text, kind = 'info', title = '') {
   container.querySelector('.toast')?.remove();
-  const t = h('div', { class: `toast toast-${kind}`, role: 'status' }, text);
+  const t = h('div', { class: `toast toast-${kind}`, role: 'status' },
+    title ? h('strong', { class: 'toast-title' }, title) : null, text);
   container.append(t);
   setTimeout(() => t.classList.add('out'), 2600);
   setTimeout(() => t.remove(), 3000);
