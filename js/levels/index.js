@@ -1,0 +1,40 @@
+/**
+ * Catalogue des mondes. Un niveau est une donnée pure :
+ *   { id, start: '2x+1=9', cards: ['-1', '/2'], par, intro?, mode?: 'guess' }
+ * Le monde fournit les règles (negatives, fractions) et l'affichage
+ * ('full' | 'mixed' | 'symbolic'). Un niveau peut surcharger rules et display.
+ * Ce format servira tel quel au futur mode création (énigme encodée dans l'URL).
+ */
+import world1 from './world1.js';
+import world2 from './world2.js';
+
+const upcoming = (id, title, subtitle) => ({
+  id, title, subtitle, upcoming: true, rules: { negatives: false, fractions: false }, display: 'full', levels: [],
+});
+
+export const WORLDS = [
+  world1,
+  world2,
+  upcoming(3, 'Deux étapes', 'Défaire les opérations dans le bon ordre'),
+  upcoming(4, 'Boîtes des deux côtés', 'Rassembler les boîtes'),
+  upcoming(5, 'Les négatifs', 'Ballons et poids s\'annulent'),
+  upcoming(6, 'Les parenthèses', 'Des sacs pleins d\'objets'),
+  upcoming(7, 'Mise en équation', 'Du problème à la balance'),
+];
+
+export const worldById = (id) => WORLDS.find((w) => w.id === Number(id));
+
+/** Niveau enrichi des réglages de son monde : { ...level, world, index, rules, display }. */
+export function getLevel(worldId, index) {
+  const world = worldById(worldId);
+  const level = world?.levels[index];
+  if (!level) return null;
+  return {
+    ...level,
+    world,
+    index,
+    cards: level.cards ?? [],
+    rules: { ...world.rules, ...level.rules },
+    display: level.display ?? world.display,
+  };
+}

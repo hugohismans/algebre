@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Équilibre · tests</title>
+  <style>
+    body { font: 15px/1.5 ui-monospace, monospace; margin: 16px; background: #fdf8ef; color: #1f2a44; }
+    .ko { color: #c62839; font-weight: bold; } .ok { color: #11806f; }
+    pre { white-space: pre-wrap; margin: 0; }
+  </style>
+</head>
+<body>
+  <h1>Tests du moteur</h1>
+  <div id="out"></div>
+  <script type="module">
+    const out = document.getElementById('out');
+    // engine.test.js appelle run() : on affiche chaque ligne dans la page.
+    window.__log = (line, ok) => {
+      const pre = document.createElement('pre');
+      pre.textContent = line; pre.className = ok ? 'ok' : 'ko';
+      out.append(pre);
+    };
+    await import('./engine.test.js');
+  </script>
+</body>
+</html>

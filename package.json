@@ -1,0 +1,9 @@
+{
+  "name": "equilibre",
+  "private": true,
+  "type": "module",
+  "description": "Équilibre : apprendre à résoudre les équations du premier degré avec une balance.",
+  "scripts": {
+    "test": "node tests/engine.test.js"
+  }
+}
