@@ -191,6 +191,15 @@ test('niveaux : le par est exactement le nombre minimal de coups', () => {
     assert.equal(r.moves, l.par, `${l.id} : par ${l.par}, minimum réel ${r.moves}`);
   }
 });
+test('niveaux : solutions variées dans chaque monde', () => {
+  for (const w of WORLDS) {
+    const values = w.levels.map((l) => F.toString(solve(eqn(l.start)).value));
+    values.forEach((v, i) => {
+      assert.ok(i === 0 || v !== values[i - 1], `${w.levels[i].id} : même solution que la mission précédente (${v})`);
+      assert.ok(values.filter((u) => u === v).length <= 2, `monde ${w.id} : la solution ${v} revient plus de deux fois`);
+    });
+  }
+});
 test('étoiles : 3 au par, 2 jusqu\'à par + 2, sinon 1', () => {
   assert.deepEqual([1, 2, 3, 4, 5].map((m) => starsFor(m, 2)), [3, 3, 2, 2, 1]);
 });
